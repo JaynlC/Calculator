@@ -1,50 +1,58 @@
+// To Do list: 
+// 1) Sort out decimal point, equals button, selecting multiple operators at once, delete button, divide by zero error, roundning, backspace.  
+
+
 //global variables
 let numberString = "";
 let number=0;
+let storedValues = [];
+let clickCount = -1;
+let result = 0;
+let operatorSelected = [];
 
 // operation functions
-const add = function(numbers) {
-	return numbers.reduce((accum, value)=> {
-        return accum+value;
-    })
+const add = function(previousValue, newNum) {
+	return previousValue+newNum;
 };
 
-const subtract = function(numbers) {
-	return numbers.reduce((accum, value)=> {
-        return accum-value;
-    })
+const subtract = function(previousValue, newNum) {
+	return previousValue - newNum;
 };
 
-// const sum = function(numbers) {
-// 	return numbers.reduce((accum, value) => {
-//     return accum+value;
-//   },0);
-// };
-
-const multiply = function(numbers) {
-  return numbers.reduce((accum, value) => {
-    return accum * value;
-  })
+const multiply = function(previousValue, newNum) {
+  return previousValue * newNum;
 };
 
-const divide = function(numbers) {
-    return numbers.reduce((accum, value) => {
-        return accum / value;
-    })
+const divide = function(previousValue, newNum) {
+    return previousValue / newNum;
 }
 
-function operate(num1, num2, operator) {
-    // takes in two numbers, takes in operator, and returns answer when equals is clicked
-    //num1 is what user selects first in one go. So create an num1=0
-    //user then selects an operator, associate that with the functions above. 
-    // clear screen so user can see second number next
-    //num2 what user selects in one go, so create num2 = 0.
-    
+function operate(arrayNumbers, operatorSelected) {
 
-    return operator([num1,num2]);
+    if (!isNaN(arrayNumbers[1])) {
+        let i = operatorSelected.length-1;
+        if (i === 1) {
+            result = arrayNumbers[0];
+        }
+        if (operatorSelected[i-1] === "+") {
+            result = add(result, arrayNumbers[i]);
+            answerScreen(result);
+            console.log(result);
+        } else if (operatorSelected[i-1] === "-") {
+            result = subtract(result, arrayNumbers[i]);
+            answerScreen(result);
+            console.log(result);
+        } else if (operatorSelected[i-1]==="x") {
+            result = multiply(result, arrayNumbers[i]);
+            answerScreen(result);
+            console.log(result);
+        } else if (operatorSelected[i-1]==="/") {
+            result = divide(result, arrayNumbers[i]);
+            answerScreen(result);
+            console.log(result);
+        }     
+    } else answerScreen(operatorSelected);
 }
-
-
 
 function userSelection() {
     // user Selecting a Number:
@@ -58,10 +66,13 @@ function userSelection() {
             answerScreen(number);
         })
     })
-    // clear the answerScreen:
+    // clear the answerScreen and erase previous data:
     const buttonClearScreen = document.querySelector("#clear");
     buttonClearScreen.addEventListener("click", ()=>{
         numberString="";
+        storedValues = [];
+        operatorSelected = [];
+        clickCount = -1;
         answerScreen(numberString)
     }) 
 }
@@ -72,23 +83,49 @@ function answerScreen(value) {
 }
 
 function operatorSelection() {
-    //when operator is selected, save the previous number, clear screen, and run userSelection again.
-    //where shall we save the previous number? Array? Object?
-    // what does object look like? Could each element store previous value entered and summed? Via reduce?
     const operators = document.querySelectorAll(".operator");
     operators.forEach(operator => {
         operator.addEventListener("click", e => {
-            // save number first to an object or array. 
-            numberString="";
-            operatorSelected = e.target.id;
-            answerScreen(operatorSelected);
-            //save the operator to an object or array too?
-            return operatorSelected;
+                clickCount+=1;
+                storedValues[clickCount] = number;
+                console.log(storedValues);
+                numberString="";
+                operatorSelected[clickCount] = e.target.id;
+                console.log(operatorSelected);
+                // answerScreen(operatorSelected);
+                if (clickCount > -1) {
+                    operate(storedValues, operatorSelected);
+                }  
         })
     })
 }
 
+// bug requires solving below:
+function userSelectsEquals() {
+    equalsButton = document.querySelector(".result");
+    equalsButton.addEventListener("click", () => {
+        // clickCount+=1;
+        // storedValues[clickCount] = number;
+        operate(storedValues, operatorSelected);
+    })
+}
+
+// add Hover effect code. 
+function hoverButtons() {
+    const hoverButtons = document.querySelectorAll(".buttons > *");
+    hoverButtons.forEach(button => {
+        button.addEventListener(("mouseenter"), () => {
+            button.classList.toggle("buttonHover");
+        })
+    })
+    hoverButtons.forEach(button => {
+        button.addEventListener(("mouseleave"), () => {
+            button.classList.toggle("buttonHover");
+        })
+    })
+}
 
 userSelection();
+userSelectsEquals();
 operatorSelection();
-// operator(numbers, operatorSelection());
+hoverButtons();

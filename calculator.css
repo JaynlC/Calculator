@@ -69,7 +69,6 @@ footer {
     box-shadow: 5px 5px;
 }
 
-
 .buttons { 
     flex-wrap: wrap;
     justify-content: center;
@@ -86,5 +85,10 @@ footer {
 
 .calculatorTop > .buttons {
     width: 90px;
+}
+
+.buttons > .buttonHover { 
+    transform: scale(1.05);
+    background-color:rgba(230, 238, 240, 0.83);
 }
 
