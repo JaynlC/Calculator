@@ -1,5 +1,4 @@
 # Calculator
-Calculator Project
 ------------------
 ------------------
 This is the final project from foundations section of The Odin Project. The task was to create a easy to use calculator for a user. 
