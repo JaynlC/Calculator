@@ -1,10 +1,6 @@
-// To Do list: 
-// 1) Sort out decimal point, delete button, roundning, backspace (keyboard support), delete all console.logs() 
-
 let numberString = "";
 let number=0;
-let storedValues = [];
-let clickCount = -1;
+let arrayNumbers = [];
 let result = 0;
 let operatorSelected = [];
 let equalsSelected = false;
@@ -18,7 +14,7 @@ function userSelectionNumber() {
     buttonNumber.forEach(buttonNumber => {
         buttonNumber.addEventListener("click", (e) => {
             numberString += e.target.id;
-            number = parseInt(numberString);
+            number = +numberString;
             // if user selects number, operator is no longer selected. 
             if (checkOperatorSelected ===true) {
                 checkOperatorSelected = false;
@@ -26,7 +22,7 @@ function userSelectionNumber() {
             if (equalsSelected ===true) {
                 equalsSelected = false;
             }
-            answerScreen(number);
+            answerScreen(numberString);
         })
     }) 
 }
@@ -36,29 +32,33 @@ function answerScreen(value) {
     return answerScreen.textContent = value;
 }
 
+function userSelectsDeletePreviousValue() {
+    const buttonDelete = document.getElementById("deletePrevious")
+    buttonDelete.addEventListener("click", () => {
+        let newNumberString = numberString.slice(0, (numberString.length)-1);
+        numberString = newNumberString;
+        number = +numberString;
+        // If user deletes decimal, let user enter decimal again. 
+        if (!numberString.includes(".")) {
+            restoreDecimalButton();
+        }
+        answerScreen(numberString);
+    }) 
+}
+
 function userSelectsDecimal() {
     buttonDecimal.addEventListener("click", (e) => {
         numberString += e.target.id;
-        number = numberString;
-        // watch what happens here when selecting decimal
+        number = +numberString;
         buttonDecimal.classList.remove("decimal");
+        buttonDecimal.removeAttribute("id");
         answerScreen(numberString);
     })
 }
 
-function clearScreen() {
-    // clear the answerScreen and erase previous data:
-    const buttonClearScreen = document.querySelector("#clear");
-    buttonClearScreen.addEventListener("click", ()=>{
-        numberString="";
-        storedValues = [];
-        operatorSelected = [];
-        clickCountNumber = -1;
-        clickCountOperator = -1;
-        checkOperatorSelected = false;
-        equalsSelected = false;
-        answerScreen(numberString)
-    }) 
+function restoreDecimalButton() {
+    buttonDecimal.setAttribute("id", ".");
+    buttonDecimal.classList.add("decimal");
 }
 
 function userSelectsOperator() {
@@ -71,6 +71,7 @@ function userSelectsOperator() {
             } else if (checkOperatorSelected === false) {
                 checkOperatorSelected = true;
             }
+            restoreDecimalButton();
             evaluateUserSelection(e);
         })
     })
@@ -80,89 +81,59 @@ function userSelectsEquals() {
     equalsButton = document.querySelector(".result");
     equalsButton.addEventListener("click", (e) => {
         equalsSelected = true;
+        restoreDecimalButton();
         evaluateUserSelection(e);
     })
 }
 
 function evaluateUserSelection(e) {
+    // Add new number to array and reset numbserString. 
     clickCountNumber+=1;
-    storedValues[clickCountNumber] = number;
-    console.log(storedValues);
+    arrayNumbers[clickCountNumber] = number;
     numberString="";
-
+    // Check operator selected and add to operator array. 
     if (e.target.id !== "=") {
         clickCountOperator+=1;
         operatorSelected[clickCountOperator] = e.target.id;
-        console.log(operatorSelected);
     }
-    // if more than one element in array, do math.
-    if (clickCountNumber > -1) {
-        operate(storedValues, operatorSelected);
-    }  
+    operate(arrayNumbers, operatorSelected);
 }
 
 function operate(arrayNumbers, operatorSelected) {
-    console.log(`operatorCheck before Calc = ${checkOperatorSelected}`);
-    console.log(`equals check before Calc = ${equalsSelected}`);
+    let i = operatorSelected.length-1;
+    let j = arrayNumbers.length - 1;
+    
     if (!isNaN(arrayNumbers[1])) {
-        let i = operatorSelected.length-1;
-        let j = arrayNumbers.length - 1;
-        buttonDecimal.classList.add("decimal");
-        // if two operators in the operatorArray, i = 1, hence first value (previousValue in above function arguments) from arrayNumbers is equal to "result" variable herein. 
         if (arrayNumbers.length === 2) {
             result = arrayNumbers[0];
+            // If equals selected, select correct (last) operator from operator array list. 
             if (equalsSelected === true) {
                 i+=1;
             }
-        } else if ( i >=1 && equalsSelected === true) {
+        } else if (i >=1 && equalsSelected === true) {
             i += 1;
         }
-        // bug when entering equals a second time - fix required: 
-        // if operator selected after equals, do NOT evaluate just yet. 
+
         if ((equalsSelected === true && checkOperatorSelected === true) || (equalsSelected === false && checkOperatorSelected === false)) {
-            // do nothing and display result when user selects operator immedietely after selecting equals.
+            // Do not evaluate if operator selected immediately after equal button. 
             answerScreen(result);
         } else if (operatorSelected[i-1] === "+") {
             result = add(result, arrayNumbers[j]);
             answerScreen(result);
-            
-            
-            console.log(result);
-            console.log(`operatorCheck = ${checkOperatorSelected}`);
-            console.log(`equals check: ${equalsSelected}`);
-
         } else if (operatorSelected[i-1] === "-") {
             result = subtract(result, arrayNumbers[j]);
             answerScreen(result);
-            
-            
-
-            console.log(result);
-            console.log(`operatorCheck = ${checkOperatorSelected}`);
-            console.log(`equals check: ${equalsSelected}`);
-
         } else if (operatorSelected[i-1]==="x") {
             result = multiply(result, arrayNumbers[j]);
             answerScreen(result);
-            
-            
-            console.log(result);
-            console.log(`operatorCheck = ${checkOperatorSelected}`);
-            console.log(`equals check: ${equalsSelected}`);
-
         } else if (operatorSelected[i-1]==="/") {
             result = divide(result, arrayNumbers[j]);
             answerScreen(result);
-            
-            
-
-            console.log(result);
-            console.log(`operatorCheck = ${checkOperatorSelected}`);
-            console.log(`equals check: ${equalsSelected}`);
-        }     
+        } else if (operatorSelected[i-1]==="exp") {
+            result = exponent(result, arrayNumbers[j]);
+            answerScreen(result);
+        }
     } else answerScreen(operatorSelected);
-       
-        
 }
 
 const add = function(previousValue, newNum) {
@@ -181,6 +152,22 @@ const divide = function(previousValue, newNum) {
     return previousValue / newNum;
 }
 
+function clearScreen() {
+    const buttonClearScreen = document.querySelector("#clear");
+    buttonClearScreen.addEventListener("click", () => {
+        numberString="";
+        arrayNumbers = [];
+        operatorSelected = [];
+        clickCountNumber = -1;
+        clickCountOperator = -1;
+        checkOperatorSelected = false;
+        equalsSelected = false;
+        restoreDecimalButton();
+        answerScreen(numberString)
+        result = 0;
+    }) 
+}
+
 function hoverButtons() {
     const hoverButtons = document.querySelectorAll(".buttons > *");
     hoverButtons.forEach(button => {
@@ -193,9 +180,19 @@ function hoverButtons() {
             button.classList.toggle("buttonHover");
         })
     })
+    // Confirm to user button click visually. 
+    hoverButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            button.classList.add("buttonClick")
+            button.addEventListener("transitionend", ()=>{
+                button.classList.remove("buttonClick");
+            })
+        })
+    })
 }
 
 userSelectionNumber();
+userSelectsDeletePreviousValue();
 userSelectsEquals();
 userSelectsOperator();
 userSelectsDecimal(); 
